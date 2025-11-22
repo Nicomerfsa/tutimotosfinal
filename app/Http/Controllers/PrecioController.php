@@ -55,13 +55,17 @@ class PrecioController extends Controller
 
         try {
             foreach ($request->precios as $precioData) {
-                PrecioVenta::create([
-                    'idArticuloMarca' => $precioData['idArticuloMarca'],
-                    'precioVenta' => $precioData['precioVenta'],
-                    'tieneDescuento' => $precioData['tieneDescuento'] ?? false,
-                    'precioDescuento' => $precioData['precioDescuento'] ?? null,
-                    'fechaActualizacion' => now()
-                ]);
+                PrecioVenta::updateOrCreate(
+                    [
+                        'idArticuloMarca' => $precioData['idArticuloMarca']
+                    ],
+                    [
+                        'precioVenta' => $precioData['precioVenta'],
+                        'tieneDescuento' => $precioData['tieneDescuento'] ?? false,
+                        'precioDescuento' => $precioData['precioDescuento'] ?? null,
+                        'fechaActualizacion' => now()
+                    ]
+                );
             }
 
             DB::commit();
@@ -88,13 +92,17 @@ class PrecioController extends Controller
             return back()->with('error', 'No existe un precio base para este producto');
         }
 
-        PrecioVenta::create([
-            'idArticuloMarca' => $idArticuloMarca,
-            'precioVenta' => $precioActual->precioVenta,
-            'tieneDescuento' => true,
-            'precioDescuento' => $request->precioDescuento,
-            'fechaActualizacion' => now()
-        ]);
+        PrecioVenta::updateOrCreate(
+            [
+                'idArticuloMarca' => $idArticuloMarca
+            ],
+            [
+                'precioVenta' => $precioActual->precioVenta,
+                'tieneDescuento' => true,
+                'precioDescuento' => $request->precioDescuento,
+                'fechaActualizacion' => now()
+            ]
+        );
 
         return redirect()->route('precios.index')->with('success', 'Descuento aplicado correctamente');
     }
@@ -109,18 +117,21 @@ class PrecioController extends Controller
             return back()->with('error', 'No existe un precio para este producto');
         }
 
-        PrecioVenta::create([
-            'idArticuloMarca' => $idArticuloMarca,
-            'precioVenta' => $precioActual->precioVenta,
-            'tieneDescuento' => false,
-            'precioDescuento' => null,
-            'fechaActualizacion' => now()
-        ]);
+        PrecioVenta::updateOrCreate(
+            [
+                'idArticuloMarca' => $idArticuloMarca
+            ],
+            [
+                'precioVenta' => $precioActual->precioVenta,
+                'tieneDescuento' => false,
+                'precioDescuento' => null,
+                'fechaActualizacion' => now()
+            ]
+        );
 
         return redirect()->route('precios.index')->with('success', 'Descuento removido correctamente');
     }
 
-    // MÉTODOS NUEVOS PARA EDICIÓN INDIVIDUAL
     public function editarIndividual($idArticuloMarca)
     {
         $articuloMarca = ArticuloMarca::with(['articulo', 'marca', 'preciosVenta'])
@@ -140,13 +151,17 @@ class PrecioController extends Controller
         ]);
 
         try {
-            PrecioVenta::create([
-                'idArticuloMarca' => $idArticuloMarca,
-                'precioVenta' => $request->precioVenta,
-                'tieneDescuento' => $request->tieneDescuento ?? false,
-                'precioDescuento' => $request->precioDescuento,
-                'fechaActualizacion' => now()
-            ]);
+            PrecioVenta::updateOrCreate(
+                [
+                    'idArticuloMarca' => $idArticuloMarca
+                ],
+                [
+                    'precioVenta' => $request->precioVenta,
+                    'tieneDescuento' => $request->tieneDescuento ?? false,
+                    'precioDescuento' => $request->precioDescuento,
+                    'fechaActualizacion' => now()
+                ]
+            );
 
             return redirect()->route('precios.index')->with('success', 'Precio actualizado correctamente');
 

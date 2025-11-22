@@ -24,7 +24,7 @@
                 <select name="idCatArticulo" required>
                     <option value="">Seleccionar categoría</option>
                     @foreach($categorias as $categoria)
-                        <option value="{{ $categoria->idCatArticulo }}" {{ (old('idCatArticulo') ?? $producto->idCatArticulo) == $categoria->idCatArticulo ? 'selected' : '' }}>
+                        <option value="{{ $categoria->idCatArticulo }}" {{ old('idCatArticulo', $producto->idCatArticulo) == $categoria->idCatArticulo ? 'selected' : '' }}>
                             {{ $categoria->nombreCatArticulo }}
                         </option>
                     @endforeach
@@ -37,7 +37,7 @@
                 <select name="idMarca" required>
                     <option value="">Seleccionar marca</option>
                     @foreach($marcas as $marca)
-                        <option value="{{ $marca->idMarca }}" {{ (old('idMarca') ?? ($producto->articulosMarcas->first()->idMarca ?? '')) == $marca->idMarca ? 'selected' : '' }}>
+                        <option value="{{ $marca->idMarca }}" {{ old('idMarca', $producto->articulosMarcas->first()->idMarca ?? '') == $marca->idMarca ? 'selected' : '' }}>
                             {{ $marca->nombreMarca }}
                         </option>
                     @endforeach
@@ -50,8 +50,23 @@
         </tr>
         <tr>
             <td></td>
-            <td><button type="submit">Actualizar Producto</button></td>
+            <td>
+                <button type="submit">Actualizar Producto</button>
+                <a href="{{ route('precios.editar', $producto->articulosMarcas->first()->idArticuloMarca ?? '') }}" style="margin-left: 10px;">
+                    Editar Precio
+                </a>
+            </td>
         </tr>
     </table>
 </form>
+
+@if($errors->any())
+    <div style="color: red;">
+        <ul>
+            @foreach($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
 @endsection

@@ -6,6 +6,7 @@ use App\Models\Articulo;
 use App\Models\ArticuloMarca;
 use App\Models\Marca;
 use App\Models\CategoriaArticulo;
+use App\Models\PrecioVenta;
 use Illuminate\Http\Request;
 
 class ProductoController extends Controller
@@ -43,7 +44,10 @@ class ProductoController extends Controller
             'nombreArticulo' => 'required|string|max:100',
             'idCatArticulo' => 'required|exists:catarticulo,idCatArticulo',
             'descripcionArticulo' => 'nullable|string|max:200',
-            'idMarca' => 'required|exists:marcas,idMarca'
+            'idMarca' => 'required|exists:marcas,idMarca',
+            'precioVenta' => 'required|numeric|min:0',
+            'tieneDescuento' => 'sometimes|boolean',
+            'precioDescuento' => 'nullable|numeric|min:0'
         ]);
 
         // Crear el artículo
@@ -54,12 +58,21 @@ class ProductoController extends Controller
         ]);
 
         // Crear la relación artículo-marca
-        ArticuloMarca::create([
+        $articuloMarca = ArticuloMarca::create([
             'idArticulo' => $articulo->idArticulo,
             'idMarca' => $request->idMarca,
         ]);
 
-        return redirect()->route('productos.index')->with('success', 'Producto creado correctamente');
+        // Crear el precio de venta
+        PrecioVenta::create([
+            'idArticuloMarca' => $articuloMarca->idArticuloMarca,
+            'precioVenta' => $request->precioVenta,
+            'tieneDescuento' => $request->tieneDescuento ?? false,
+            'precioDescuento' => $request->precioDescuento,
+            'fechaActualizacion' => now()
+        ]);
+
+        return redirect()->route('productos.index')->with('success', 'Producto creado correctamente con su precio');
     }
 
     public function show($id)

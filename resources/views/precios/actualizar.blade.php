@@ -24,7 +24,7 @@
         </tr>
         @foreach($articulos as $index => $articulo)
         @php
-            $precioActual = $articulo->preciosVenta->last();
+            $precioActual = $articulo->preciosVenta->sortByDesc('fechaActualizacion')->first();
         @endphp
         <tr>
             <td>{{ $articulo->articulo->nombreArticulo }}</td>
@@ -46,16 +46,19 @@
             <td>
                 <label>
                     <input type="checkbox" name="precios[{{ $index }}][tieneDescuento]" value="1" 
-                           {{ $precioActual && $precioActual->tieneDescuento ? 'checked' : '' }}>
+                           {{ $precioActual && $precioActual->tieneDescuento ? 'checked' : '' }}
+                           class="descuento-checkbox" data-index="{{ $index }}">
                     Aplicar descuento
                 </label>
             </td>
             <td>
                 <input type="number" name="precios[{{ $index }}][precioDescuento]" 
                        step="0.01" min="0" 
-                       value="{{ $precioActual && $precioActual->tieneDescuento ? $precioActual->precioDescuento : 0 }}" 
+                       value="{{ $precioActual && $precioActual->tieneDescuento ? $precioActual->precioDescuento : '' }}" 
                        style="width: 100px;" 
-                       placeholder="Precio descuento">
+                       placeholder="Precio descuento"
+                       id="precioDescuento-{{ $index }}"
+                       {{ $precioActual && $precioActual->tieneDescuento ? '' : 'disabled' }}>
             </td>
         </tr>
         @endforeach
@@ -67,7 +70,13 @@
 </form>
 
 <br>
-<p><strong>Nota:</strong> Esta acción creará nuevos registros de precios manteniendo el historial.</p>
+<p><strong>Nota:</strong> Esta acción actualizará los registros existentes de precios manteniendo el historial.</p>
+
+@if(session('success'))
+    <div style="color: green;">
+        {{ session('success') }}
+    </div>
+@endif
 
 @if($errors->any())
     <div style="color: red;">
@@ -78,4 +87,28 @@
         </ul>
     </div>
 @endif
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.descuento-checkbox').forEach(function(checkbox) {
+        const index = checkbox.getAttribute('data-index');
+        const precioDescuentoInput = document.getElementById('precioDescuento-' + index);
+        
+        function toggleDescuentoField() {
+            if (checkbox.checked) {
+                precioDescuentoInput.disabled = false;
+                precioDescuentoInput.required = true;
+            } else {
+                precioDescuentoInput.disabled = true;
+                precioDescuentoInput.required = false;
+                precioDescuentoInput.value = '';
+            }
+        }
+        
+        toggleDescuentoField();
+        
+        checkbox.addEventListener('change', toggleDescuentoField);
+    });
+});
+</script>
 @endsection

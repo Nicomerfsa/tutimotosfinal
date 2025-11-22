@@ -44,6 +44,30 @@
             </td>
         </tr>
         <tr>
+            <td><label>Precio de Venta:</label></td>
+            <td>
+                <input type="number" name="precioVenta" value="{{ old('precioVenta') }}" 
+                       step="0.01" min="0" required style="width: 150px;">
+            </td>
+        </tr>
+        <tr>
+            <td><label>Aplicar Descuento:</label></td>
+            <td>
+                <label>
+                    <input type="checkbox" name="tieneDescuento" value="1" 
+                           {{ old('tieneDescuento') ? 'checked' : '' }} id="tieneDescuentoCheckbox">
+                    Activar descuento
+                </label>
+            </td>
+        </tr>
+        <tr id="precioDescuentoRow" style="display: none;">
+            <td><label>Precio con Descuento:</label></td>
+            <td>
+                <input type="number" name="precioDescuento" value="{{ old('precioDescuento') }}" 
+                       step="0.01" min="0" style="width: 150px;">
+            </td>
+        </tr>
+        <tr>
             <td><label>Descripción:</label></td>
             <td><textarea name="descripcionArticulo" rows="3" cols="50">{{ old('descripcionArticulo') }}</textarea></td>
         </tr>
@@ -53,4 +77,35 @@
         </tr>
     </table>
 </form>
+
+@if($errors->any())
+    <div style="color: red;">
+        <ul>
+            @foreach($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const descuentoCheckbox = document.getElementById('tieneDescuentoCheckbox');
+    const descuentoRow = document.getElementById('precioDescuentoRow');
+    
+    function toggleDescuentoField() {
+        if (descuentoCheckbox.checked) {
+            descuentoRow.style.display = '';
+        } else {
+            descuentoRow.style.display = 'none';
+        }
+    }
+    
+    // Estado inicial
+    toggleDescuentoField();
+    
+    // Cambiar cuando se modifique el checkbox
+    descuentoCheckbox.addEventListener('change', toggleDescuentoField);
+});
+</script>
 @endsection

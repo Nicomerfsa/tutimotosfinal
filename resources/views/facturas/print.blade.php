@@ -69,41 +69,44 @@
             </tr>
         </thead>
         <tbody>
+            @php
+                $subtotal = 0;
+            @endphp
             @foreach($factura->movimiento->detalles as $index => $detalle)
+            @php
+                $precioUnitario = $detalle->articuloMarca->preciosVenta->last()->precioVenta ?? 0;
+                $subtotalProducto = $detalle->cantidad * $precioUnitario;
+                $subtotal += $subtotalProducto;
+            @endphp
             <tr>
                 <td>{{ $index + 1 }}</td>
                 <td>{{ $detalle->articuloMarca->articulo->nombreArticulo }}</td>
                 <td>{{ $detalle->articuloMarca->marca->nombreMarca }}</td>
                 <td>{{ $detalle->cantidad }}</td>
-                <td>$ {{ number_format($detalle->articuloMarca->preciosVenta->last()->precioVenta ?? 0, 2) }}</td>
-                <td>$ {{ number_format($detalle->cantidad * ($detalle->articuloMarca->preciosVenta->last()->precioVenta ?? 0), 2) }}</td>
+                <td>$ {{ number_format($precioUnitario, 2) }}</td>
+                <td>$ {{ number_format($subtotalProducto, 2) }}</td>
             </tr>
             @endforeach
         </tbody>
     </table>
 
+    @php
+        $iva = $subtotal * 0.21;
+        $total = $subtotal + $iva;
+    @endphp
+
     <table class="totals">
         <tr>
             <td><strong>Subtotal:</strong></td>
-            <td>$ {{ number_format($factura->subtotal, 2) }}</td>
+            <td><strong>$ {{ number_format($subtotal, 2) }}</strong></td>
         </tr>
-        @if($factura->descuentoEfectivo > 0)
-        <tr>
-            <td><strong>Descuento:</strong></td>
-            <td>$ {{ number_format($factura->descuentoEfectivo, 2) }}</td>
-        </tr>
-        <tr>
-            <td><strong>Subtotal con Desc.:</strong></td>
-            <td>$ {{ number_format($factura->subtotal - $factura->descuentoEfectivo, 2) }}</td>
-        </tr>
-        @endif
         <tr>
             <td><strong>IVA (21%):</strong></td>
-            <td>$ {{ number_format($factura->iva, 2) }}</td>
+            <td><strong>$ {{ number_format($iva, 2) }}</strong></td>
         </tr>
         <tr>
             <td><strong>TOTAL:</strong></td>
-            <td><strong>$ {{ number_format($factura->total, 2) }}</strong></td>
+            <td><strong>$ {{ number_format($total, 2) }}</strong></td>
         </tr>
     </table>
 

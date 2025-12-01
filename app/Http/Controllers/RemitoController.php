@@ -18,6 +18,8 @@ class RemitoController extends Controller
             ->select(
                 'remitos.*',
                 'movimientos.idMovimiento',
+                'movimientos.tipoMovimiento',
+                'movimientos.tipo_salida', // Incluir tipo de salida
                 'almacenes.nombreAlmacen',
                 'usuarios.usuario'
             );
@@ -109,5 +111,22 @@ class RemitoController extends Controller
             ->get();
         
         return view('remitos.print', compact('remito', 'detalles'));
+    }
+
+    /**
+     * Obtener texto descriptivo para el tipo de salida
+     */
+    private function getTipoSalidaTexto($tipoSalida)
+    {
+        $tipos = [
+            'VENTA' => 'Venta',
+            'CONSUMO_INTERNO' => 'Consumo Interno',
+            'ROTURA' => 'Rotura/Pérdida',
+            'TRASLADO' => 'Traslado entre Almacenes',
+            'DEVOLUCION' => 'Devolución a Proveedor',
+            'OTRO' => 'Otro'
+        ];
+
+        return $tipos[$tipoSalida] ?? 'Salida';
     }
 }

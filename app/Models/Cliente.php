@@ -32,4 +32,28 @@ class Cliente extends Model
     {
         return $this->hasMany(Factura::class, 'idCliente', 'idCliente');
     }
+
+    /**
+     * Obtener el cliente genérico para cotizaciones anónimas
+     */
+    public static function getClienteGenerico()
+    {
+        return self::where('cuit', '99999999999')->first();
+    }
+
+    /**
+     * Crear cliente genérico si no existe
+     */
+    public static function crearClienteGenerico()
+    {
+        return self::create([
+            'razonSocial' => 'CLIENTE OCASIONAL',
+            'cuit' => '99999999999',
+            'direccion' => 'No especificada',
+            'telefono' => 'No especificado',
+            'correo' => 'ocasional@ejemplo.com',
+            'fechaAlta' => now(),
+            'estado' => 'ACTIVO'
+        ]);
+    }
 }

@@ -48,6 +48,7 @@ class PrecioController extends Controller
             'precios.*.idArticuloMarca' => 'required|exists:articulomarca,idArticuloMarca',
             'precios.*.precioVenta' => 'required|numeric|min:0',
             'precios.*.tieneDescuento' => 'sometimes|boolean',
+            'precios.*.porcentajeDescuento' => 'nullable|numeric|min:0|max:100',
             'precios.*.precioDescuento' => 'nullable|numeric|min:0',
         ]);
 
@@ -55,6 +56,15 @@ class PrecioController extends Controller
 
         try {
             foreach ($request->precios as $precioData) {
+                $precioDescuento = null;
+                
+                // Calcular precio de descuento si hay porcentaje
+                if (isset($precioData['tieneDescuento']) && $precioData['tieneDescuento'] && 
+                    isset($precioData['porcentajeDescuento']) && $precioData['porcentajeDescuento'] > 0) {
+                    $descuento = $precioData['precioVenta'] * ($precioData['porcentajeDescuento'] / 100);
+                    $precioDescuento = $precioData['precioVenta'] - $descuento;
+                }
+
                 PrecioVenta::updateOrCreate(
                     [
                         'idArticuloMarca' => $precioData['idArticuloMarca']
@@ -62,7 +72,7 @@ class PrecioController extends Controller
                     [
                         'precioVenta' => $precioData['precioVenta'],
                         'tieneDescuento' => $precioData['tieneDescuento'] ?? false,
-                        'precioDescuento' => $precioData['precioDescuento'] ?? null,
+                        'precioDescuento' => $precioDescuento,
                         'fechaActualizacion' => now()
                     ]
                 );
@@ -81,7 +91,7 @@ class PrecioController extends Controller
     public function aplicarDescuento(Request $request, $idArticuloMarca)
     {
         $request->validate([
-            'precioDescuento' => 'required|numeric|min:0',
+            'porcentajeDescuento' => 'required|numeric|min:0|max:100',
         ]);
 
         $precioActual = PrecioVenta::where('idArticuloMarca', $idArticuloMarca)
@@ -92,6 +102,10 @@ class PrecioController extends Controller
             return back()->with('error', 'No existe un precio base para este producto');
         }
 
+        // Calcular precio de descuento basado en el porcentaje
+        $descuento = $precioActual->precioVenta * ($request->porcentajeDescuento / 100);
+        $precioDescuento = $precioActual->precioVenta - $descuento;
+
         PrecioVenta::updateOrCreate(
             [
                 'idArticuloMarca' => $idArticuloMarca
@@ -99,7 +113,7 @@ class PrecioController extends Controller
             [
                 'precioVenta' => $precioActual->precioVenta,
                 'tieneDescuento' => true,
-                'precioDescuento' => $request->precioDescuento,
+                'precioDescuento' => $precioDescuento,
                 'fechaActualizacion' => now()
             ]
         );
@@ -147,10 +161,18 @@ class PrecioController extends Controller
         $request->validate([
             'precioVenta' => 'required|numeric|min:0',
             'tieneDescuento' => 'sometimes|boolean',
-            'precioDescuento' => 'nullable|numeric|min:0',
+            'porcentajeDescuento' => 'nullable|numeric|min:0|max:100',
         ]);
 
         try {
+            $precioDescuento = null;
+            
+            // Calcular precio de descuento si hay porcentaje
+            if ($request->tieneDescuento && $request->porcentajeDescuento > 0) {
+                $descuento = $request->precioVenta * ($request->porcentajeDescuento / 100);
+                $precioDescuento = $request->precioVenta - $descuento;
+            }
+
             PrecioVenta::updateOrCreate(
                 [
                     'idArticuloMarca' => $idArticuloMarca
@@ -158,7 +180,7 @@ class PrecioController extends Controller
                 [
                     'precioVenta' => $request->precioVenta,
                     'tieneDescuento' => $request->tieneDescuento ?? false,
-                    'precioDescuento' => $request->precioDescuento,
+                    'precioDescuento' => $precioDescuento,
                     'fechaActualizacion' => now()
                 ]
             );

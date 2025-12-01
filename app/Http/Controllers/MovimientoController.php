@@ -8,6 +8,7 @@ use App\Models\ArticuloMarca;
 use App\Models\Almacen;
 use App\Models\StockPorAlmacen;
 use App\Models\Remito;
+use App\Models\Cliente;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -106,8 +107,9 @@ class MovimientoController extends Controller
     {
         $almacenes = Almacen::where('estadoAlmacen', 'ACTIVO')->get();
         $articulos = ArticuloMarca::with(['articulo', 'marca', 'stocks'])->get();
+        $clientes = Cliente::where('estado', 'ACTIVO')->get(); // Agregado: cargar clientes activos
         
-        return view('movimientos.salida', compact('almacenes', 'articulos'));
+        return view('movimientos.salida', compact('almacenes', 'articulos', 'clientes')); // Agregado: pasar clientes a la vista
     }
 
     public function storeSalida(Request $request)
@@ -117,7 +119,9 @@ class MovimientoController extends Controller
             'observaciones' => 'nullable|string|max:200',
             'articulos' => 'required|array|min:1',
             'articulos.*.idArticuloMarca' => 'required|exists:articulomarca,idArticuloMarca',
-            'articulos.*.cantidad' => 'required|integer|min:1'
+            'articulos.*.cantidad' => 'required|integer|min:1',
+            'tipoSalida' => 'required|string', // Agregado: validar tipo de salida
+            'idCliente' => 'nullable|exists:clientes,idCliente' // Agregado: validar cliente si es necesario
         ]);
 
         DB::beginTransaction();
@@ -151,7 +155,19 @@ class MovimientoController extends Controller
                 'fechaMovimiento' => now()
             ]);
 
-            // Resto del código permanece igual...
+            // Si es una venta y se especificó un cliente, guardar la relación
+            if ($request->tipoSalida === 'VENTA' && $request->idCliente) {
+                // Aquí puedes guardar la relación con el cliente en la tabla movimientos o en una tabla pivote
+                // Por ahora, lo guardamos en las observaciones para referencia
+                $cliente = Cliente::find($request->idCliente);
+                if ($cliente) {
+                    $movimiento->observaciones = ($movimiento->observaciones ? $movimiento->observaciones . ' | ' : '') . 
+                                               'Cliente: ' . $cliente->razonSocial;
+                    $movimiento->save();
+                }
+            }
+
+            // Crear detalles del movimiento
             foreach ($request->articulos as $articulo) {
                 DetMovimiento::create([
                     'idMovimiento' => $movimiento->idMovimiento,

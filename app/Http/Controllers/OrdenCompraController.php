@@ -7,7 +7,6 @@ use App\Models\DetalleOrdenCompra;
 use App\Models\Proveedor;
 use App\Models\ArticuloMarca;
 use App\Models\Empresa;
-use App\Models\PrecioVenta;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -41,7 +40,7 @@ class OrdenCompraController extends Controller
     public function create()
     {
         $proveedores = Proveedor::orderBy('razonSocialProveedor')->get();
-        $articulos = ArticuloMarca::with(['articulo', 'marca', 'preciosVenta'])->get();
+        $articulos = ArticuloMarca::with(['articulo', 'marca'])->get(); // Removido preciosVenta
         $empresa = Empresa::first();
         
         // Si no hay empresa, crear una por defecto para evitar errores
@@ -65,7 +64,7 @@ class OrdenCompraController extends Controller
             'articulos' => 'required|array|min:1',
             'articulos.*.idArticuloMarca' => 'required|exists:articulomarca,idArticuloMarca',
             'articulos.*.cantidad' => 'required|integer|min:1',
-            'articulos.*.precioUnitario' => 'required|numeric|min:0',
+            // Precio removido de la validación
         ]);
 
         DB::beginTransaction();
@@ -74,12 +73,6 @@ class OrdenCompraController extends Controller
             // Generar número de orden de compra
             $ultimaOC = OrdenCompra::orderBy('idOrdenCompra', 'desc')->first();
             $comprobanteOC = 'OC-' . str_pad(($ultimaOC ? $ultimaOC->idOrdenCompra : 0) + 1, 4, '0', STR_PAD_LEFT);
-
-            // Calcular totales
-            $subtotal = 0;
-            foreach ($request->articulos as $articulo) {
-                $subtotal += $articulo['cantidad'] * $articulo['precioUnitario'];
-            }
 
             // Obtener empresa (usar la primera)
             $empresa = Empresa::first();
@@ -99,7 +92,7 @@ class OrdenCompraController extends Controller
                     'idOrdenCompra' => $ordenCompra->idOrdenCompra,
                     'idArticuloMarca' => $articulo['idArticuloMarca'],
                     'cantidad' => $articulo['cantidad'],
-                    'precioUnitario' => $articulo['precioUnitario']
+                    'precioUnitario' => 0 // Precio fijo en 0
                 ]);
             }
 
@@ -143,7 +136,7 @@ class OrdenCompraController extends Controller
             'articulos' => 'required|array|min:1',
             'articulos.*.idArticuloMarca' => 'required|exists:articulomarca,idArticuloMarca',
             'articulos.*.cantidad' => 'required|integer|min:1',
-            'articulos.*.precioUnitario' => 'required|numeric|min:0',
+            // Precio removido de la validación
         ]);
 
         DB::beginTransaction();
@@ -165,7 +158,7 @@ class OrdenCompraController extends Controller
                     'idOrdenCompra' => $orden->idOrdenCompra,
                     'idArticuloMarca' => $articulo['idArticuloMarca'],
                     'cantidad' => $articulo['cantidad'],
-                    'precioUnitario' => $articulo['precioUnitario']
+                    'precioUnitario' => 0 // Precio fijo en 0
                 ]);
             }
 
@@ -209,39 +202,5 @@ class OrdenCompraController extends Controller
         return view('ordenes-compra.print', compact('orden'));
     }
 
-    // NUEVO MÉTODO PARA OBTENER PRECIO DE ARTÍCULO
-    public function getPrecioArticulo($idArticuloMarca)
-    {
-        try {
-            $precioActual = PrecioVenta::where('idArticuloMarca', $idArticuloMarca)
-                ->orderBy('fechaActualizacion', 'desc')
-                ->first();
-
-            if ($precioActual) {
-                $precio = $precioActual->tieneDescuento && $precioActual->precioDescuento 
-                    ? $precioActual->precioDescuento 
-                    : $precioActual->precioVenta;
-                
-                return response()->json([
-                    'success' => true,
-                    'precio' => $precio,
-                    'tieneDescuento' => $precioActual->tieneDescuento,
-                    'precioOriginal' => $precioActual->precioVenta,
-                    'precioDescuento' => $precioActual->precioDescuento
-                ]);
-            } else {
-                return response()->json([
-                    'success' => false,
-                    'precio' => 0,
-                    'message' => 'No se encontró precio para este producto'
-                ]);
-            }
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'precio' => 0,
-                'message' => 'Error al obtener el precio: ' . $e->getMessage()
-            ]);
-        }
-    }
+    // MÉTODO ELIMINADO: getPrecioArticulo - Ya no se necesita
 }

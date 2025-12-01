@@ -3,53 +3,177 @@
 @section('title', 'Nuevo Cliente')
 
 @section('content')
-<h2>Crear Nuevo Cliente</h2>
-
-<a href="{{ route('clientes.index') }}">← Volver a Clientes</a>
-
-<br><br>
-
-<form method="POST" action="{{ route('clientes.store') }}">
-    @csrf
+<div class="max-w-3xl mx-auto">
     
-    <table>
-        <tr>
-            <td><label>Razón Social:</label></td>
-            <td><input type="text" name="razonSocial" value="{{ old('razonSocial') }}" required></td>
-        </tr>
-        <tr>
-            <td><label>CUIT:</label></td>
-            <td><input type="text" name="cuit" value="{{ old('cuit') }}" maxlength="11" required></td>
-        </tr>
-        <tr>
-            <td><label>Dirección:</label></td>
-            <td><input type="text" name="direccion" value="{{ old('direccion') }}"></td>
-        </tr>
-        <tr>
-            <td><label>Teléfono:</label></td>
-            <td><input type="text" name="telefono" value="{{ old('telefono') }}"></td>
-        </tr>
-        <tr>
-            <td><label>Email:</label></td>
-            <td><input type="email" name="correo" value="{{ old('correo') }}"></td>
-        </tr>
-        <tr>
-            <td></td>
-            <td>
-                <button type="submit">Crear Cliente</button>
-                <a href="{{ route('clientes.index') }}">Cancelar</a>
-            </td>
-        </tr>
-    </table>
-</form>
-
-@if($errors->any())
-    <div style="color: red;">
-        <ul>
-            @foreach($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
+    <div class="mb-6 flex items-center justify-between">
+        <h2 class="text-2xl font-bold text-gray-900">Crear Nuevo Cliente</h2>
+        <a href="{{ route('clientes.index') }}" class="text-gray-500 hover:text-gray-900 transition-colors flex items-center gap-1 text-sm font-medium">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            Volver
+        </a>
     </div>
-@endif
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div class="p-8">
+            <form method="POST" action="{{ route('clientes.store') }}" id="clienteForm">
+                @csrf
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    
+                    <div class="md:col-span-1">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Razón Social / Nombre *</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                            </div>
+                            <input type="text" name="razonSocial" value="{{ old('razonSocial') }}" required
+                                class="pl-10 w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 shadow-sm transition-colors @error('razonSocial') border-red-500 @enderror"
+                                placeholder="Ej: Juan Pérez"
+                                oninput="this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, '')">
+                        </div>
+                        @error('razonSocial')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @else
+                            <p class="mt-1 text-xs text-gray-500"></p>
+                        @enderror
+                    </div>
+
+                    <div class="md:col-span-1">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">CUIT / DNI *</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0c0 .884-.956 2.008-2.008 2.008h-.268"></path></svg>
+                            </div>
+                            <input type="text" name="cuit" value="{{ old('cuit') }}" maxlength="11" required
+                                class="pl-10 w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 shadow-sm transition-colors @error('cuit') border-red-500 @enderror"
+                                placeholder="Solo números, sin guiones"
+                                oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                        </div>
+                        @error('cuit')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @else
+                            <p class="mt-1 text-xs text-gray-500"></p>
+                        @enderror
+                    </div>
+
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Dirección</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                            </div>
+                            <input type="text" name="direccion" value="{{ old('direccion') }}"
+                                class="pl-10 w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 shadow-sm transition-colors @error('direccion') border-red-500 @enderror"
+                                placeholder="Calle, Altura, Ciudad">
+                        </div>
+                        @error('direccion')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div class="md:col-span-1">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
+                            </div>
+                            <input type="tel" name="telefono" value="{{ old('telefono') }}" maxlength="10"
+                                class="pl-10 w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 shadow-sm transition-colors @error('telefono') border-red-500 @enderror"
+                                placeholder="Ej: 3704123456"
+                                oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                        </div>
+                        @error('telefono')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @else
+                            <p class="mt-1 text-xs text-gray-500"></p>
+                        @enderror
+                    </div>
+
+                    <div class="md:col-span-1">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Correo Electrónico</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                            </div>
+                            <input type="email" name="correo" value="{{ old('correo') }}"
+                                class="pl-10 w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 shadow-sm transition-colors @error('correo') border-red-500 @enderror"
+                                placeholder="cliente@ejemplo.com">
+                        </div>
+                        @error('correo')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                </div>
+
+                <div class="mt-8 flex items-center justify-end gap-4 border-t border-gray-100 pt-6">
+                    <a href="{{ route('clientes.index') }}" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                        Cancelar
+                    </a>
+                    <button type="submit" class="px-6 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 transition-colors shadow-sm">
+                        Crear Cliente
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('clienteForm');
+    
+    form.addEventListener('submit', function(e) {
+        let isValid = true;
+        
+        // Validación Razón Social
+        const razonSocialInput = document.querySelector('input[name="razonSocial"]');
+        if (razonSocialInput.value && !/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/.test(razonSocialInput.value)) {
+            isValid = false;
+        }
+        
+        // Validación CUIT/DNI
+        const cuitInput = document.querySelector('input[name="cuit"]');
+        if (cuitInput.value && !/^\d{1,11}$/.test(cuitInput.value)) {
+            isValid = false;
+        }
+        
+        // Validación Teléfono
+        const telefonoInput = document.querySelector('input[name="telefono"]');
+        if (telefonoInput.value && !/^\d{10}$/.test(telefonoInput.value)) {
+            isValid = false;
+        }
+        
+        // Validación Email
+        const emailInput = document.querySelector('input[name="correo"]');
+        if (emailInput.value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput.value)) {
+            isValid = false;
+        }
+        
+        if (!isValid) {
+            e.preventDefault();
+            alert('Por favor, corrige los errores en el formulario antes de enviar.');
+        }
+    });
+
+    // Validación en tiempo real para Razón Social
+    const razonSocialInput = document.querySelector('input[name="razonSocial"]');
+    razonSocialInput.addEventListener('input', function() {
+        this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, '');
+    });
+
+    // Validación en tiempo real para CUIT
+    const cuitInput = document.querySelector('input[name="cuit"]');
+    cuitInput.addEventListener('input', function() {
+        this.value = this.value.replace(/[^0-9]/g, '');
+    });
+
+    // Validación en tiempo real para Teléfono
+    const telefonoInput = document.querySelector('input[name="telefono"]');
+    telefonoInput.addEventListener('input', function() {
+        this.value = this.value.replace(/[^0-9]/g, '');
+    });
+});
+</script>
 @endsection

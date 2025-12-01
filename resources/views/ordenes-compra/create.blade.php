@@ -3,312 +3,205 @@
 @section('title', 'Nueva Orden de Compra')
 
 @section('content')
-<h2>Crear Nueva Orden de Compra</h2>
+<div class="max-w-4xl mx-auto">
 
-<a href="{{ route('ordenes-compra.index') }}">← Volver a Órdenes</a> |
-<a href="{{ route('proveedores.create') }}">Nuevo Proveedor</a>
+    <div class="mb-6 flex items-center justify-between">
+        <div>
+            <h2 class="text-2xl font-bold text-gray-900">Crear Nueva Orden</h2>
+            <p class="text-sm text-gray-500 mt-1">Genera un pedido a proveedor para reabastecer stock.</p>
+        </div>
+        <div class="flex gap-3">
+            <a href="{{ route('ordenes-compra.index') }}" class="text-gray-500 hover:text-gray-900 transition-colors flex items-center gap-1 text-sm font-medium">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                Volver
+            </a>
+        </div>
+    </div>
 
-<br><br>
+    @if($errors->any())
+        <div class="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg shadow-sm">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm leading-5 font-medium text-red-800">Se encontraron errores:</h3>
+                    <ul class="list-disc list-inside text-sm text-red-700 mt-1">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            </div>
+        </div>
+    @endif
 
-<form method="POST" action="{{ route('ordenes-compra.store') }}" id="ordenForm">
-    @csrf
-    
-    <table width="100%">
-        <tr>
-            <td width="50%" valign="top">
-                <h3>Información de la Orden</h3>
-                <table>
-                    <tr>
-                        <td><label>Proveedor:</label></td>
-                        <td>
-                            <select name="idProveedor" required style="width: 300px;">
+    <form method="POST" action="{{ route('ordenes-compra.store') }}" id="ordenForm">
+        @csrf
+        
+        <div class="space-y-6">
+            
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 border-b border-gray-100 pb-2">Datos Generales</h3>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Proveedor</label>
+                        <div class="flex gap-2">
+                            <select name="idProveedor" required class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 shadow-sm text-sm">
                                 <option value="">Seleccionar proveedor</option>
                                 @foreach($proveedores as $proveedor)
                                     <option value="{{ $proveedor->idProveedor }}">
-                                        {{ $proveedor->razonSocialProveedor }} - {{ $proveedor->cuitProveedor }}
+                                        {{ $proveedor->razonSocialProveedor }}
                                     </option>
                                 @endforeach
                             </select>
-                        </td>
-                    </tr>
-                    @if($empresa)
-                    <tr>
-                        <td><label>Empresa:</label></td>
-                        <td>{{ $empresa->razonSocial }} - CUIT: {{ $empresa->cuit }}</td>
-                    </tr>
-                    @endif
-                </table>
-            </td>
-            <td width="50%" valign="top">
-                <h3>Productos a Solicitar</h3>
-                <div id="productos-container">
-                    <div class="producto-item">
-                        <table width="100%" border="1" cellpadding="8" cellspacing="0">
-                            <tr>
-                                <th>Producto</th>
-                                <th width="100">Cantidad</th>
-                                <th width="120">Precio Unit.</th>
-                                <th width="120">Subtotal</th>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <select name="articulos[0][idArticuloMarca]" class="articulo-select" required style="width: 100%;" onchange="cargarPrecio(this, 0)">
-                                        <option value="">Seleccionar producto</option>
-                                        @foreach($articulos as $articulo)
-                                            @php
-                                                $precioActual = $articulo->preciosVenta->sortByDesc('fechaActualizacion')->first();
-                                                $precio = $precioActual ? ($precioActual->tieneDescuento && $precioActual->precioDescuento ? $precioActual->precioDescuento : $precioActual->precioVenta) : 0;
-                                            @endphp
-                                            <option value="{{ $articulo->idArticuloMarca }}" data-precio="{{ $precio }}">
-                                                {{ $articulo->articulo->nombreArticulo }} - {{ $articulo->marca->nombreMarca }}
-                                                @if($precio > 0)
-                                                    ($ {{ number_format($precio, 2) }})
-                                                @endif
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </td>
-                                <td>
-                                    <input type="number" name="articulos[0][cantidad]" min="1" value="1" required placeholder="Cant" style="width: 100%;" onchange="calcularSubtotal(0)">
-                                </td>
-                                <td>
-                                    <input type="number" name="articulos[0][precioUnitario]" step="0.01" min="0" value="0" required placeholder="Precio" style="width: 100%;" onchange="calcularSubtotal(0)">
-                                    <div id="precio-info-0" style="font-size: 0.8em; color: #666;"></div>
-                                </td>
-                                <td>
-                                    <span id="subtotal-0">$ 0.00</span>
-                                </td>
-                            </tr>
-                        </table>
+                            <a href="{{ route('proveedores.create') }}" class="flex-shrink-0 p-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200" title="Crear Nuevo Proveedor">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                            </a>
+                        </div>
                     </div>
+
+                    @if($empresa)
+                    <div class="bg-blue-50 p-3 rounded-lg border border-blue-100">
+                        <label class="block text-xs font-bold text-blue-800 uppercase">Facturar A</label>
+                        <p class="text-sm text-blue-900 font-medium">{{ $empresa->razonSocial }}</p>
+                        <p class="text-xs text-blue-600">CUIT: {{ $empresa->cuit }}</p>
+                    </div>
+                    @endif
                 </div>
-                <button type="button" onclick="agregarProducto()" style="margin-top: 10px; padding: 5px 10px;">+ Agregar otro producto</button>
-                
-                <br><br>
-                <h3>Totales de la Orden</h3>
-                <table border="1" cellpadding="10" cellspacing="0" width="300">
-                    <tr>
-                        <th width="60%">Subtotal</th>
-                        <td width="40%" align="right" id="subtotal-total">$ 0.00</td>
-                    </tr>
-                    <tr>
-                        <th><strong>TOTAL</strong></th>
-                        <td align="right" id="total-orden"><strong>$ 0.00</strong></td>
-                    </tr>
-                </table>
-            </td>
-        </tr>
-        <tr>
-            <td colspan="2" align="center">
-                <br>
-                <button type="submit" style="padding: 10px 20px; border: none; cursor: pointer; font-size: 16px;">
-                    Crear Orden de Compra
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                    <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wider">Productos a Solicitar</h3>
+                </div>
+
+                <div class="p-6">
+                    <div class="hidden md:grid grid-cols-12 gap-4 mb-2 px-2">
+                        <div class="col-span-8 text-xs font-medium text-gray-500 uppercase">Producto</div>
+                        <div class="col-span-3 text-xs font-medium text-gray-500 uppercase">Cantidad</div>
+                        <div class="col-span-1"></div>
+                    </div>
+
+                    <div id="productos-container" class="space-y-3">
+                    </div>
+
+                    <button type="button" onclick="agregarProducto()" class="mt-6 w-full py-4 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50 transition flex flex-col items-center justify-center gap-1 group">
+                        <svg class="w-8 h-8 text-gray-400 group-hover:text-blue-500 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                        <span class="font-medium">Agregar otro producto</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex justify-end">
+                <button type="submit" class="flex justify-center items-center gap-2 px-6 py-3 border border-transparent text-sm font-medium rounded-lg text-white bg-gray-900 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 transition shadow-sm">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    Confirmar Orden
                 </button>
-                <a href="{{ route('ordenes-compra.index') }}" style="padding: 10px 20px; text-decoration: none; display: inline-block;">
-                    Cancelar
-                </a>
-            </td>
-        </tr>
-    </table>
-</form>
+            </div>
+        </div>
+    </form>
+</div>
 
 <script>
-let productoCount = 1;
-
-function agregarProducto() {
-    const container = document.getElementById('productos-container');
-    const nuevoProducto = document.createElement('div');
-    nuevoProducto.className = 'producto-item';
-    nuevoProducto.innerHTML = `
-        <table width="100%" border="1" cellpadding="8" cellspacing="0" style="margin-top: 10px;">
-            <tr>
-                <td>
-                    <select name="articulos[${productoCount}][idArticuloMarca]" class="articulo-select" required style="width: 100%;" onchange="cargarPrecio(this, ${productoCount})">
-                        <option value="">Seleccionar producto</option>
-                        @foreach($articulos as $articulo)
-                            @php
-                                $precioActual = $articulo->preciosVenta->sortByDesc('fechaActualizacion')->first();
-                                $precio = $precioActual ? ($precioActual->tieneDescuento && $precioActual->precioDescuento ? $precioActual->precioDescuento : $precioActual->precioVenta) : 0;
-                            @endphp
-                            <option value="{{ $articulo->idArticuloMarca }}" data-precio="{{ $precio }}">
-                                {{ $articulo->articulo->nombreArticulo }} - {{ $articulo->marca->nombreMarca }}
-                                @if($precio > 0)
-                                    ($ {{ number_format($precio, 2) }})
-                                @endif
-                            </option>
-                        @endforeach
-                    </select>
-                </td>
-                <td>
-                    <input type="number" name="articulos[${productoCount}][cantidad]" min="1" value="1" required placeholder="Cant" style="width: 100%;" onchange="calcularSubtotal(${productoCount})">
-                </td>
-                <td>
-                    <input type="number" name="articulos[${productoCount}][precioUnitario]" step="0.01" min="0" value="0" required placeholder="Precio" style="width: 100%;" onchange="calcularSubtotal(${productoCount})">
-                    <div id="precio-info-${productoCount}" style="font-size: 0.8em; color: #666;"></div>
-                </td>
-                <td>
-                    <span id="subtotal-${productoCount}">$ 0.00</span>
-                </td>
-            </tr>
-        </table>
+    // 1. Guardamos las opciones del select en una variable JS limpia
+    // Usamos addslashes para evitar romper el string JS si hay comillas en los nombres
+    const productOptions = `
+        <option value="">Seleccionar producto</option>
+        @foreach($articulos as $articulo)
+            <option value="{{ $articulo->idArticuloMarca }}">
+                {{ addslashes($articulo->articulo->nombreArticulo) }} - {{ addslashes($articulo->marca->nombreMarca) }}
+            </option>
+        @endforeach
     `;
-    container.appendChild(nuevoProducto);
-    productoCount++;
-}
 
-function eliminarProducto(button) {
-    if (document.querySelectorAll('.producto-item').length > 1) {
-        button.closest('.producto-item').remove();
-        calcularTotales();
-    } else {
-        alert('Debe haber al menos un producto.');
-    }
-}
+    let productoCount = 0;
 
-async function cargarPrecio(selectElement, index) {
-    const idArticuloMarca = selectElement.value;
-    const precioInput = document.querySelector(`input[name="articulos[${index}][precioUnitario]"]`);
-    const precioInfo = document.getElementById(`precio-info-${index}`);
-    
-    if (idArticuloMarca) {
-        // Mostrar loading
-        precioInfo.innerHTML = '<span>Cargando precio...</span>';
+    function agregarProducto() {
+        const container = document.getElementById('productos-container');
+        const index = productoCount; // Capturamos valor actual
+        const nuevoDiv = document.createElement('div');
         
-        try {
-            const response = await fetch(`/ordenes-compra/precio/${idArticuloMarca}`);
-            const data = await response.json();
-            
-            if (data.success) {
-                precioInput.value = data.precio;
-                if (data.tieneDescuento && data.precioDescuento) {
-                    precioInfo.innerHTML = `<span>Precio con descuento (Original: $${data.precioOriginal})</span>`;
-                } else {
-                    precioInfo.innerHTML = '<span>Precio actual cargado</span>';
-                }
-            } else {
-                precioInput.value = 0;
-                precioInfo.innerHTML = `<span>${data.message}</span>`;
+        nuevoDiv.className = 'producto-item bg-white md:bg-gray-50 rounded-lg border border-gray-200 p-3 md:border-0 md:p-0 animate-fade-in-up';
+        
+        nuevoDiv.innerHTML = `
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
+                
+                <div class="col-span-1 md:col-span-8">
+                    <label class="md:hidden text-xs font-bold text-gray-500 mb-1 block">Producto</label>
+                    <select name="articulos[${index}][idArticuloMarca]" 
+                            class="articulo-select w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" 
+                            required>
+                        ${productOptions}
+                    </select>
+                </div>
+                
+                <div class="col-span-1 md:col-span-3">
+                    <label class="md:hidden text-xs font-bold text-gray-500 mb-1 block">Cantidad</label>
+                    <input type="number" name="articulos[${index}][cantidad]" 
+                           min="1" value="1" required 
+                           class="cantidad-input w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" 
+                           placeholder="1">
+                </div>
+
+                <div class="col-span-1 flex justify-end md:justify-center pt-1">
+                    <button type="button" onclick="eliminarProducto(this)" class="text-gray-400 hover:text-red-500 transition p-1 rounded hover:bg-red-50" title="Quitar fila">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    </button>
+                </div>
+            </div>
+        `;
+
+        container.appendChild(nuevoDiv);
+        productoCount++;
+    }
+
+    function eliminarProducto(button) {
+        const items = document.querySelectorAll('.producto-item');
+        if (items.length > 1) {
+            button.closest('.producto-item').remove();
+        } else {
+            alert('La orden debe tener al menos un producto.');
+        }
+    }
+
+    // Validación al enviar (Submit Listener)
+    document.getElementById('ordenForm').addEventListener('submit', function(e) {
+        let errorMessage = '';
+        let hasErrors = false;
+
+        // Validar Cantidades
+        const cantidades = document.querySelectorAll('.cantidad-input');
+        cantidades.forEach(input => {
+            if (parseInt(input.value) < 1) {
+                errorMessage = '⚠️ Todas las cantidades deben ser al menos 1.';
+                hasErrors = true;
             }
-        } catch (error) {
-            console.error('Error:', error);
-            precioInput.value = 0;
-            precioInfo.innerHTML = '<span>Error al cargar precio</span>';
-        }
-        
-        // Calcular subtotal después de cargar el precio
-        calcularSubtotal(index);
-    } else {
-        precioInput.value = 0;
-        precioInfo.innerHTML = '';
-        calcularSubtotal(index);
-    }
-}
+        });
 
-function calcularSubtotal(index) {
-    const cantidadInput = document.querySelector(`input[name="articulos[${index}][cantidad]"]`);
-    const precioInput = document.querySelector(`input[name="articulos[${index}][precioUnitario]"]`);
-    const subtotalSpan = document.getElementById(`subtotal-${index}`);
-    
-    const cantidad = parseFloat(cantidadInput.value) || 0;
-    const precio = parseFloat(precioInput.value) || 0;
-    const subtotal = cantidad * precio;
-    
-    subtotalSpan.textContent = '$ ' + subtotal.toFixed(2);
-    calcularTotales();
-}
-
-function calcularTotales() {
-    let subtotalTotal = 0;
-    
-    document.querySelectorAll('.producto-item').forEach((item, index) => {
-        const cantidad = parseFloat(item.querySelector('input[name*="cantidad"]').value) || 0;
-        const precio = parseFloat(item.querySelector('input[name*="precioUnitario"]').value) || 0;
-        subtotalTotal += cantidad * precio;
-    });
-    
-    document.getElementById('subtotal-total').textContent = '$ ' + subtotalTotal.toFixed(2);
-    document.getElementById('total-orden').innerHTML = '<strong>$ ' + subtotalTotal.toFixed(2) + '</strong>';
-}
-
-// Calcular totales al cargar la página
-document.addEventListener('DOMContentLoaded', function() {
-    calcularTotales();
-    
-    // Cargar precios iniciales si hay productos seleccionados
-    document.querySelectorAll('.articulo-select').forEach((select, index) => {
-        if (select.value) {
-            setTimeout(() => cargarPrecio(select, index), 500);
+        if (hasErrors) {
+            e.preventDefault(); // Detener envío
+            alert(errorMessage);
         }
     });
-});
 
-// Validación antes de enviar el formulario
-document.getElementById('ordenForm').addEventListener('submit', function(e) {
-    let hasErrors = false;
-    let errorMessage = '';
-    
-    // Verificar que al menos un producto tenga precio > 0
-    const precios = document.querySelectorAll('input[name*="precioUnitario"]');
-    let preciosValidos = false;
-    
-    precios.forEach(input => {
-        if (parseFloat(input.value) > 0) {
-            preciosValidos = true;
-        }
+    // Iniciar con 1 producto vacío
+    document.addEventListener('DOMContentLoaded', () => {
+        agregarProducto();
     });
-    
-    if (!preciosValidos) {
-        errorMessage += 'Al menos un producto debe tener un precio mayor a cero.\n';
-        hasErrors = true;
-    }
-    
-    // Verificar que las cantidades sean válidas
-    const cantidades = document.querySelectorAll('input[name*="cantidad"]');
-    cantidades.forEach(input => {
-        if (parseInt(input.value) < 1) {
-            errorMessage += 'Todas las cantidades deben ser al menos 1.\n';
-            hasErrors = true;
-        }
-    });
-    
-    if (hasErrors) {
-        e.preventDefault();
-        alert(errorMessage);
-    }
-});
 </script>
 
 <style>
-.producto-item {
-    margin-bottom: 10px;
-}
-
-.articulo-select, input[type="number"] {
-    padding: 5px;
-    border: 1px solid #ccc;
-    border-radius: 3px;
-}
-
-button {
-    padding: 5px 10px;
-    border: 1px solid #ccc;
-    border-radius: 3px;
-    cursor: pointer;
-}
-
-button:hover {
-    background-color: #f8f9fa;
-}
+    /* Transiciones suaves */
+    .transition { transition-property: all; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 150ms; }
+    
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in-up {
+        animation: fadeInUp 0.3s ease-out forwards;
+    }
 </style>
-
-@if($errors->any())
-    <div style="color: red; padding: 15px; margin: 10px 0;">
-        <strong>Errores encontrados:</strong>
-        <ul>
-            @foreach($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-    </div>
-@endif
 @endsection

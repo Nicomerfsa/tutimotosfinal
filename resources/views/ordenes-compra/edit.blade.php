@@ -3,55 +3,90 @@
 @section('title', 'Editar Orden de Compra')
 
 @section('content')
-<h2>Editar Orden de Compra: {{ $orden->comprobanteOC }}</h2>
+<div class="max-w-4xl mx-auto">
 
-<a href="{{ route('ordenes-compra.index') }}">← Volver a Órdenes</a>
+    <div class="mb-6 flex items-center justify-between">
+        <div>
+            <h2 class="text-2xl font-bold text-gray-900">Editar Orden #{{ $orden->comprobanteOC }}</h2>
+            <p class="text-sm text-gray-500 mt-1">Modifica los detalles o el proveedor de la orden.</p>
+        </div>
+        <a href="{{ route('ordenes-compra.index') }}" class="text-gray-500 hover:text-gray-900 transition-colors flex items-center gap-1 text-sm font-medium">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            Volver
+        </a>
+    </div>
 
-<br><br>
+    @if($errors->any())
+        <div class="mb-6 bg-red-50 border-l-4 border-red-500 p-4">
+            <p class="font-bold text-red-700">Por favor corrige los siguientes errores:</p>
+            <ul class="list-disc list-inside text-sm text-red-600 mt-1">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 
-<form method="POST" action="{{ route('ordenes-compra.update', $orden->idOrdenCompra) }}" id="ordenForm">
-    @csrf
-    @method('PUT')
-    
-    <table width="100%">
-        <tr>
-            <td width="50%" valign="top">
-                <h3>Información de la Orden</h3>
-                <table>
-                    <tr>
-                        <td><label>Proveedor:</label></td>
-                        <td>
-                            <select name="idProveedor" required>
-                                <option value="">Seleccionar proveedor</option>
-                                @foreach($proveedores as $proveedor)
-                                    <option value="{{ $proveedor->idProveedor }}" {{ $orden->idProveedor == $proveedor->idProveedor ? 'selected' : '' }}>
-                                        {{ $proveedor->razonSocialProveedor }} - {{ $proveedor->cuitProveedor }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </td>
-                    </tr>
+    <form method="POST" action="{{ route('ordenes-compra.update', $orden->idOrdenCompra) }}" id="ordenForm">
+        @csrf
+        @method('PUT')
+
+        <div class="space-y-6">
+            
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wider mb-4 border-b border-gray-100 pb-2">
+                    Datos de la Orden
+                </h3>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Proveedor</label>
+                        <select name="idProveedor" required class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 shadow-sm text-sm">
+                            <option value="">Seleccionar proveedor</option>
+                            @foreach($proveedores as $proveedor)
+                                <option value="{{ $proveedor->idProveedor }}" {{ $orden->idProveedor == $proveedor->idProveedor ? 'selected' : '' }}>
+                                    {{ $proveedor->razonSocialProveedor }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
                     @if($empresa)
-                    <tr>
-                        <td><label>Empresa:</label></td>
-                        <td>{{ $empresa->razonSocial }} - CUIT: {{ $empresa->cuit }}</td>
-                    </tr>
+                    <div class="bg-gray-50 p-3 rounded-lg border border-gray-100">
+                        <label class="block text-xs font-bold text-gray-500 uppercase">Facturar a</label>
+                        <p class="text-sm text-gray-900 font-medium">{{ $empresa->razonSocial }}</p>
+                        <p class="text-xs text-gray-500">CUIT: {{ $empresa->cuit }}</p>
+                    </div>
                     @endif
-                    <tr>
-                        <td><label>Estado:</label></td>
-                        <td>{{ $orden->estado }}</td>
-                    </tr>
-                </table>
-            </td>
-            <td width="50%" valign="top">
-                <h3>Productos</h3>
-                <div id="productos-container">
-                    @foreach($orden->detalles as $index => $detalle)
-                    <div class="producto-item">
-                        <table width="100%">
-                            <tr>
-                                <td>
-                                    <select name="articulos[{{ $index }}][idArticuloMarca]" class="articulo-select" required>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Estado Actual</label>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $orden->estado == 'PENDIENTE' ? 'bg-amber-100 text-amber-800' : 'bg-gray-100 text-gray-800' }}">
+                            {{ $orden->estado }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                    <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wider">Items</h3>
+                </div>
+
+                <div class="p-6">
+                    <div class="hidden md:grid grid-cols-12 gap-4 mb-2 px-2">
+                        <div class="col-span-8 text-xs font-medium text-gray-500 uppercase">Producto</div>
+                        <div class="col-span-3 text-xs font-medium text-gray-500 uppercase">Cantidad</div>
+                        <div class="col-span-1"></div>
+                    </div>
+
+                    <div id="productos-container" class="space-y-3">
+                        @foreach($orden->detalles as $index => $detalle)
+                        <div class="producto-item bg-white md:bg-gray-50 rounded-lg border border-gray-200 p-3 md:border-0 md:p-0">
+                            <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+                                <div class="col-span-1 md:col-span-8">
+                                    <label class="md:hidden text-xs font-bold text-gray-500 mb-1 block">Producto</label>
+                                    <select name="articulos[{{ $index }}][idArticuloMarca]" class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" required>
                                         <option value="">Seleccionar producto</option>
                                         @foreach($articulos as $articulo)
                                             <option value="{{ $articulo->idArticuloMarca }}" {{ $detalle->idArticuloMarca == $articulo->idArticuloMarca ? 'selected' : '' }}>
@@ -59,112 +94,107 @@
                                             </option>
                                         @endforeach
                                     </select>
-                                </td>
-                                <td>
-                                    <input type="number" name="articulos[{{ $index }}][cantidad]" min="1" value="{{ $detalle->cantidad }}" required placeholder="Cantidad" onchange="calcularTotales()">
-                                </td>
-                                <td>
-                                    <input type="number" name="articulos[{{ $index }}][precioUnitario]" step="0.01" min="0" value="{{ $detalle->precioUnitario }}" required placeholder="Precio" onchange="calcularTotales()">
-                                </td>
-                                <td>
-                                    <button type="button" onclick="eliminarProducto(this)" style="color: red;">✕</button>
-                                </td>
-                            </tr>
-                        </table>
+                                </div>
+                                
+                                <div class="col-span-1 md:col-span-3">
+                                    <label class="md:hidden text-xs font-bold text-gray-500 mb-1 block">Cantidad</label>
+                                    <input type="number" name="articulos[{{ $index }}][cantidad]" min="1" value="{{ $detalle->cantidad }}" required 
+                                        class="cantidad-input w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" placeholder="Cant.">
+                                </div>
+
+                                <div class="col-span-1 flex justify-end md:justify-center">
+                                    <button type="button" onclick="eliminarProducto(this)" class="text-gray-400 hover:text-red-500 transition p-2">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        @endforeach
                     </div>
-                    @endforeach
+
+                    <div class="mt-6">
+                        <button type="button" onclick="agregarProducto()" class="w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-gray-400 hover:text-gray-700 hover:bg-gray-50 transition flex items-center justify-center gap-2 font-medium">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                            Agregar otro producto
+                        </button>
+                    </div>
                 </div>
-                <button type="button" onclick="agregarProducto()" style="margin-top: 10px;">+ Agregar otro producto</button>
-                
-                <br><br>
-                <h3>Totales</h3>
-                <table border="1" cellpadding="5" cellspacing="0">
-                    <tr>
-                        <th>Subtotal</th>
-                        <td id="subtotal">$ {{ number_format($orden->detalles->sum(function($detalle) { return $detalle->cantidad * $detalle->precioUnitario; }), 2) }}</td>
-                    </tr>
-                </table>
-            </td>
-        </tr>
-        <tr>
-            <td colspan="2" align="center">
-                <br>
-                <button type="submit">Actualizar Orden de Compra</button>
-                <a href="{{ route('ordenes-compra.show', $orden->idOrdenCompra) }}">Cancelar</a>
-            </td>
-        </tr>
-    </table>
-</form>
+            </div>
+
+            <div class="flex justify-end gap-3">
+                <a href="{{ route('ordenes-compra.index') }}" class="px-6 py-3 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition font-medium">
+                    Cancelar
+                </a>
+                <button type="submit" class="flex items-center gap-2 px-6 py-3 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition font-medium shadow-sm">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    Guardar Cambios
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
 
 <script>
-let productoCount = {{ $orden->detalles->count() }};
-
-function agregarProducto() {
-    const container = document.getElementById('productos-container');
-    const nuevoProducto = document.createElement('div');
-    nuevoProducto.className = 'producto-item';
-    nuevoProducto.innerHTML = `
-        <table width="100%">
-            <tr>
-                <td>
-                    <select name="articulos[${productoCount}][idArticuloMarca]" class="articulo-select" required>
-                        <option value="">Seleccionar producto</option>
-                        @foreach($articulos as $articulo)
-                            <option value="{{ $articulo->idArticuloMarca }}">
-                                {{ $articulo->articulo->nombreArticulo }} - {{ $articulo->marca->nombreMarca }}
-                            </option>
-                        @endforeach
-                    </select>
-                </td>
-                <td>
-                    <input type="number" name="articulos[${productoCount}][cantidad]" min="1" value="1" required placeholder="Cantidad" onchange="calcularTotales()">
-                </td>
-                <td>
-                    <input type="number" name="articulos[${productoCount}][precioUnitario]" step="0.01" min="0" value="0" required placeholder="Precio" onchange="calcularTotales()">
-                </td>
-                <td>
-                    <button type="button" onclick="eliminarProducto(this)" style="color: red;">✕</button>
-                </td>
-            </tr>
-        </table>
+    // Pre-generamos las opciones del select desde Blade para usarlas en JS
+    const productOptions = `
+        <option value="">Seleccionar producto</option>
+        @foreach($articulos as $articulo)
+            <option value="{{ $articulo->idArticuloMarca }}">
+                {{ addslashes($articulo->articulo->nombreArticulo) }} - {{ addslashes($articulo->marca->nombreMarca) }}
+            </option>
+        @endforeach
     `;
-    container.appendChild(nuevoProducto);
-    productoCount++;
-}
 
-function eliminarProducto(button) {
-    if (document.querySelectorAll('.producto-item').length > 1) {
-        button.closest('.producto-item').remove();
-        calcularTotales();
-    } else {
-        alert('Debe haber al menos un producto.');
-    }
-}
+    let productoCount = {{ $orden->detalles->count() }};
 
-function calcularTotales() {
-    let subtotal = 0;
-    
-    document.querySelectorAll('.producto-item').forEach((item, index) => {
-        const cantidad = item.querySelector('input[name*="cantidad"]').value;
-        const precio = item.querySelector('input[name*="precioUnitario"]').value;
+    function agregarProducto() {
+        const container = document.getElementById('productos-container');
+        const nuevoDiv = document.createElement('div');
         
-        subtotal += cantidad * precio;
-    });
-    
-    document.getElementById('subtotal').textContent = '$ ' + subtotal.toFixed(2);
-}
+        nuevoDiv.className = 'producto-item bg-white md:bg-gray-50 rounded-lg border border-gray-200 p-3 md:border-0 md:p-0 mt-3 animate-fade-in';
+        
+        nuevoDiv.innerHTML = `
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+                <div class="col-span-1 md:col-span-8">
+                    <label class="md:hidden text-xs font-bold text-gray-500 mb-1 block">Producto</label>
+                    <select name="articulos[${productoCount}][idArticuloMarca]" class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" required>
+                        ${productOptions}
+                    </select>
+                </div>
+                <div class="col-span-1 md:col-span-3">
+                    <label class="md:hidden text-xs font-bold text-gray-500 mb-1 block">Cantidad</label>
+                    <input type="number" name="articulos[${productoCount}][cantidad]" min="1" value="1" required 
+                        class="cantidad-input w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" placeholder="Cant.">
+                </div>
+                <div class="col-span-1 flex justify-end md:justify-center">
+                    <button type="button" onclick="eliminarProducto(this)" class="text-gray-400 hover:text-red-500 transition p-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    </button>
+                </div>
+            </div>
+        `;
 
-// Calcular totales al cargar la página
-document.addEventListener('DOMContentLoaded', calcularTotales);
+        container.appendChild(nuevoDiv);
+        productoCount++;
+    }
+
+    function eliminarProducto(button) {
+        const items = document.querySelectorAll('.producto-item');
+        if (items.length > 1) {
+            button.closest('.producto-item').remove();
+        } else {
+            alert('La orden debe tener al menos un producto.');
+        }
+    }
 </script>
 
-@if($errors->any())
-    <div style="color: red;">
-        <ul>
-            @foreach($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-    </div>
-@endif
+<style>
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in {
+        animation: fadeIn 0.3s ease-out forwards;
+    }
+</style>
 @endsection

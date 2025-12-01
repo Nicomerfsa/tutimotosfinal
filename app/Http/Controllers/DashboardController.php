@@ -4,11 +4,15 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
     public function index()
     {
+        // Configurar Carbon en español
+        Carbon::setLocale('es');
+        
         // Estadísticas básicas para el dashboard
         $stats = [
             'total_productos' => DB::table('articulos')->count(),
@@ -34,7 +38,12 @@ class DashboardController extends Controller
             ->select('movimientos.*', 'usuarios.usuario', 'almacenes.nombreAlmacen')
             ->orderBy('fechaMovimiento', 'desc')
             ->limit(5)
-            ->get();
+            ->get()
+            ->map(function ($movimiento) {
+                // Convertir fecha a objeto Carbon y formatear en español
+                $movimiento->fecha_humana = Carbon::parse($movimiento->fechaMovimiento)->diffForHumans();
+                return $movimiento;
+            });
 
         // Stock bajo
         $stock_bajo = DB::table('stockporalmacen')

@@ -3,38 +3,53 @@
 @section('title', 'Editar Factura')
 
 @section('content')
-<h2>Editar Factura: {{ $factura->numeroFactura }}</h2>
+<div class="max-w-7xl mx-auto">
 
-<a href="{{ route('facturas.index') }}">← Volver a Facturas</a> |
-<a href="{{ route('facturas.show', $factura->idFactura) }}">Ver Factura</a>
+    <div class="mb-6 flex items-center justify-between">
+        <div>
+            <h2 class="text-2xl font-bold text-gray-900">Editar Factura #{{ $factura->numeroFactura }}</h2>
+            <p class="text-sm text-gray-500 mt-1">Modifica los datos fiscales o el descuento.</p>
+        </div>
+        <div class="flex gap-3">
+            <a href="{{ route('facturas.index') }}" class="text-gray-500 hover:text-gray-900 transition-colors flex items-center gap-1 text-sm font-medium">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                Volver
+            </a>
+        </div>
+    </div>
 
-<br><br>
+    @if($errors->any())
+        <div class="mb-6 bg-red-50 border-l-4 border-red-500 p-4">
+            <p class="font-bold text-red-700">Corrige los siguientes errores:</p>
+            <ul class="list-disc list-inside text-sm text-red-600 mt-1">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 
-<form method="POST" action="{{ route('facturas.update', $factura->idFactura) }}" id="facturaForm">
-    @csrf
-    @method('PUT')
-    
-    <table width="100%">
-        <tr>
-            <td width="50%" valign="top">
-                <h3>Información de la Factura</h3>
-                <table>
-                    <tr>
-                        <td><label>Número Factura:</label></td>
-                        <td>{{ $factura->numeroFactura }}</td>
-                    </tr>
-                    <tr>
-                        <td><label>Fecha:</label></td>
-                        <td>{{ \Carbon\Carbon::parse($factura->fechaFactura)->format('d/m/Y') }}</td>
-                    </tr>
-                    <tr>
-                        <td><label>Movimiento:</label></td>
-                        <td>#{{ $factura->movimiento->idMovimiento }} - {{ $factura->movimiento->almacen->nombreAlmacen }}</td>
-                    </tr>
-                    <tr>
-                        <td><label>Cliente:</label></td>
-                        <td>
-                            <select name="idCliente" required>
+    @if(session('error'))
+        <div class="mb-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
+            {{ session('error') }}
+        </div>
+    @endif
+
+    <form method="POST" action="{{ route('facturas.update', $factura->idFactura) }}" id="facturaForm">
+        @csrf
+        @method('PUT')
+        
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <div class="lg:col-span-1 space-y-6">
+                
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 border-b border-gray-100 pb-2">Datos Editables</h3>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Cliente</label>
+                            <select name="idCliente" required class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 shadow-sm text-sm">
                                 <option value="">Seleccionar cliente</option>
                                 @foreach($clientes as $cliente)
                                     <option value="{{ $cliente->idCliente }}" {{ $factura->idCliente == $cliente->idCliente ? 'selected' : '' }}>
@@ -42,100 +57,169 @@
                                     </option>
                                 @endforeach
                             </select>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td><label>Tipo Factura:</label></td>
-                        <td>
-                            <select name="tipoFactura" required>
-                                <option value="A" {{ $factura->tipoFactura == 'A' ? 'selected' : '' }}>A</option>
-                                <option value="B" {{ $factura->tipoFactura == 'B' ? 'selected' : '' }}>B</option>
-                                <option value="C" {{ $factura->tipoFactura == 'C' ? 'selected' : '' }}>C</option>
-                            </select>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td><label>Descuento en Efectivo:</label></td>
-                        <td>
-                            <input type="number" name="descuentoEfectivo" step="0.01" min="0" value="{{ $factura->descuentoEfectivo }}" placeholder="0.00">
-                        </td>
-                    </tr>
-                    <tr>
-                        <td><label>Estado:</label></td>
-                        <td>{{ $factura->estado }}</td>
-                    </tr>
-                </table>
-            </td>
-            <td width="50%" valign="top">
-                <h3>Detalles de la Factura</h3>
-                <table border="1" cellpadding="5" cellspacing="0" width="100%">
-                    <tr>
-                        <th>Producto</th>
-                        <th>Cantidad</th>
-                        <th>Precio Unit.</th>
-                        <th>Subtotal</th>
-                    </tr>
-                    @foreach($factura->movimiento->detalles as $detalle)
-                    <tr>
-                        <td>{{ $detalle->articuloMarca->articulo->nombreArticulo }} - {{ $detalle->articuloMarca->marca->nombreMarca }}</td>
-                        <td>{{ $detalle->cantidad }}</td>
-                        <td>$ {{ number_format($detalle->articuloMarca->preciosVenta->last()->precioVenta ?? 0, 2) }}</td>
-                        <td>$ {{ number_format($detalle->cantidad * ($detalle->articuloMarca->preciosVenta->last()->precioVenta ?? 0), 2) }}</td>
-                    </tr>
-                    @endforeach
-                </table>
-                
-                <br>
-                <h3>Totales Actuales</h3>
-                <table border="1" cellpadding="5" cellspacing="0">
-                    <tr>
-                        <th>Subtotal</th>
-                        <td>$ {{ number_format($factura->subtotal, 2) }}</td>
-                    </tr>
-                    <tr>
-                        <th>Descuento</th>
-                        <td>$ {{ number_format($factura->descuentoEfectivo, 2) }}</td>
-                    </tr>
-                    <tr>
-                        <th>IVA (21%)</th>
-                        <td>$ {{ number_format($factura->iva, 2) }}</td>
-                    </tr>
-                    <tr>
-                        <th>Total</th>
-                        <td style="font-weight: bold;">$ {{ number_format($factura->total, 2) }}</td>
-                    </tr>
-                </table>
-            </td>
-        </tr>
-        <tr>
-            <td colspan="2" align="center">
-                <br>
-                <button type="submit">Actualizar Factura</button>
-                <a href="{{ route('facturas.show', $factura->idFactura) }}">Cancelar</a>
-            </td>
-        </tr>
-    </table>
-</form>
+                        </div>
 
-@if($errors->any())
-    <div style="color: red;">
-        <ul>
-            @foreach($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-    </div>
-@endif
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de Factura</label>
+                            <div class="grid grid-cols-3 gap-2">
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="tipoFactura" value="A" class="peer sr-only" {{ $factura->tipoFactura == 'A' ? 'checked' : '' }}>
+                                    <div class="text-center py-2 border rounded-md peer-checked:bg-gray-900 peer-checked:text-white peer-checked:border-gray-900 text-sm font-medium text-gray-600 hover:bg-gray-50 transition">A</div>
+                                </label>
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="tipoFactura" value="B" class="peer sr-only" {{ $factura->tipoFactura == 'B' ? 'checked' : '' }}>
+                                    <div class="text-center py-2 border rounded-md peer-checked:bg-gray-900 peer-checked:text-white peer-checked:border-gray-900 text-sm font-medium text-gray-600 hover:bg-gray-50 transition">B</div>
+                                </label>
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="tipoFactura" value="C" class="peer sr-only" {{ $factura->tipoFactura == 'C' ? 'checked' : '' }}>
+                                    <div class="text-center py-2 border rounded-md peer-checked:bg-gray-900 peer-checked:text-white peer-checked:border-gray-900 text-sm font-medium text-gray-600 hover:bg-gray-50 transition">C</div>
+                                </label>
+                            </div>
+                        </div>
 
-@if(session('success'))
-    <div style="color: green;">
-        {{ session('success') }}
-    </div>
-@endif
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">Descuento en Efectivo ($)</label>
+                            <div class="relative rounded-md shadow-sm">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <span class="text-gray-500 sm:text-sm">$</span>
+                                </div>
+                                <input type="number" name="descuentoEfectivo" id="descuentoEfectivo" 
+                                    step="0.01" min="0" 
+                                    value="{{ $factura->descuentoEfectivo }}" 
+                                    oninput="calcularTotales()"
+                                    class="w-full pl-7 rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-sm">
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-@if(session('error'))
-    <div style="color: red;">
-        {{ session('error') }}
-    </div>
-@endif
+                <div class="bg-gray-50 rounded-xl border border-gray-200 p-6">
+                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Datos Fijos</h3>
+                    <div class="space-y-3 text-sm">
+                        <div>
+                            <span class="block text-gray-500 text-xs">Fecha Emisión</span>
+                            <span class="font-medium text-gray-900">{{ \Carbon\Carbon::parse($factura->fechaFactura)->format('d/m/Y') }}</span>
+                        </div>
+                        <div>
+                            <span class="block text-gray-500 text-xs">Movimiento Ref.</span>
+                            <span class="font-medium text-gray-900">#{{ $factura->movimiento->idMovimiento }}</span>
+                            <span class="text-gray-500 text-xs block">{{ $factura->movimiento->almacen->nombreAlmacen }}</span>
+                        </div>
+                        <div>
+                            <span class="block text-gray-500 text-xs">Estado</span>
+                            <span class="font-medium {{ $factura->estado == 'PAGADA' ? 'text-green-600' : 'text-amber-600' }}">
+                                {{ $factura->estado }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 lg:sticky lg:top-6">
+                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Nuevos Totales</h3>
+                    
+                    <div class="space-y-3 text-sm">
+                        <div class="flex justify-between text-gray-600">
+                            <span>Subtotal</span>
+                            <span id="displaySubtotal" data-original="{{ $factura->subtotal + $factura->descuentoEfectivo }}">
+                                $ {{ number_format($factura->subtotal + $factura->descuentoEfectivo, 2) }}
+                            </span>
+                        </div>
+                        <div class="flex justify-between text-green-600 font-medium">
+                            <span>Descuento</span>
+                            <span id="displayDescuento">- $ {{ number_format($factura->descuentoEfectivo, 2) }}</span>
+                        </div>
+                        <div class="flex justify-between text-gray-600">
+                            <span>Base Imponible</span>
+                            <span id="displayBase">$ {{ number_format($factura->subtotal, 2) }}</span>
+                        </div>
+                        <div class="flex justify-between text-gray-600">
+                            <span>IVA (21%)</span>
+                            <span id="displayIva">$ {{ number_format($factura->iva, 2) }}</span>
+                        </div>
+                        <div class="border-t border-gray-100 pt-3 flex justify-between items-end">
+                            <span class="font-bold text-gray-900 text-lg">Total</span>
+                            <span id="displayTotal" class="font-bold text-gray-900 text-2xl">$ {{ number_format($factura->total, 2) }}</span>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 pt-4 border-t border-gray-100 flex flex-col gap-3">
+                        <button type="submit" class="w-full bg-gray-900 text-white py-3 rounded-lg hover:bg-gray-800 transition font-medium shadow-sm">
+                            Guardar Cambios
+                        </button>
+                        <a href="{{ route('facturas.index') }}" class="w-full text-center py-3 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition font-medium">
+                            Cancelar
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                        <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wider">Detalle de Productos</h3>
+                        <p class="text-xs text-gray-500 mt-1">Los items no se pueden editar ya que pertenecen a un movimiento de stock cerrado.</p>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Producto</th>
+                                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Cant.</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Unitario</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                @foreach($factura->movimiento->detalles as $detalle)
+                                @php
+                                    $precioVenta = app('App\Http\Controllers\CotizacionController')->getPrecioActual($detalle->idArticuloMarca);
+                                @endphp
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-4">
+                                        <div class="text-sm font-medium text-gray-900">{{ $detalle->articuloMarca->articulo->nombreArticulo }}</div>
+                                        <div class="text-xs text-gray-500">{{ $detalle->articuloMarca->marca->nombreMarca }}</div>
+                                    </td>
+                                    <td class="px-6 py-4 text-center text-sm text-gray-500">
+                                        {{ $detalle->cantidad }}
+                                    </td>
+                                    <td class="px-6 py-4 text-right text-sm text-gray-500">
+                                        $ {{ number_format($precioVenta, 2) }}
+                                    </td>
+                                    <td class="px-6 py-4 text-right text-sm font-medium text-gray-900">
+                                        $ {{ number_format($detalle->cantidad * $precioVenta, 2) }}
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </form>
+</div>
+
+<script>
+function calcularTotales() {
+    // Obtenemos el subtotal original guardado en el atributo data-original (sin formato moneda)
+    const subtotalSpan = document.getElementById('displaySubtotal');
+    const subtotalBase = parseFloat(subtotalSpan.getAttribute('data-original')) || 0;
+    
+    const descuentoInput = document.getElementById('descuentoEfectivo');
+    const descuento = parseFloat(descuentoInput.value) || 0;
+    
+    // Cálculos
+    const baseImponible = Math.max(0, subtotalBase - descuento);
+    const iva = baseImponible * 0.21;
+    const total = baseImponible + iva;
+    
+    // Actualizar UI
+    document.getElementById('displayDescuento').textContent = '- $ ' + descuento.toLocaleString('es-AR', {minimumFractionDigits: 2});
+    document.getElementById('displayBase').textContent = '$ ' + baseImponible.toLocaleString('es-AR', {minimumFractionDigits: 2});
+    document.getElementById('displayIva').textContent = '$ ' + iva.toLocaleString('es-AR', {minimumFractionDigits: 2});
+    document.getElementById('displayTotal').textContent = '$ ' + total.toLocaleString('es-AR', {minimumFractionDigits: 2});
+}
+</script>
 @endsection

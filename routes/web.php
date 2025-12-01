@@ -80,6 +80,9 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/clientes/{id}', [ClienteController::class, 'destroy'])->name('clientes.destroy');
     Route::post('/clientes/{id}/activate', [ClienteController::class, 'activate'])->name('clientes.activate');
     
+    // Ruta API para búsqueda de clientes
+    Route::get('/clientes/buscar', [ClienteController::class, 'buscar'])->name('api.clientes.buscar');
+    
     // Proveedores
     Route::get('/proveedores', [ProveedorController::class, 'index'])->name('proveedores.index');
     Route::get('/proveedores/create', [ProveedorController::class, 'create'])->name('proveedores.create');
@@ -134,7 +137,7 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/ordenes-compra/{id}', [OrdenCompraController::class, 'destroy'])->name('ordenes-compra.destroy');
     Route::post('/ordenes-compra/{id}/estado/{estado}', [OrdenCompraController::class, 'cambiarEstado'])->name('ordenes-compra.estado');
     Route::get('/ordenes-compra/{id}/print', [OrdenCompraController::class, 'print'])->name('ordenes-compra.print');
-    Route::get('/ordenes-compra/precio/{idArticuloMarca}', [OrdenCompraController::class, 'getPrecioArticulo'])->name('ordenes-compra.precio');
+    // RUTA ELIMINADA: Route::get('/ordenes-compra/precio/{idArticuloMarca}', [OrdenCompraController::class, 'getPrecioArticulo'])->name('ordenes-compra.precio');
     
     // Reportes
     Route::get('/reportes', [ReporteController::class, 'index'])->name('reportes.index');

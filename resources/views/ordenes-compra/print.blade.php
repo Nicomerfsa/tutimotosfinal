@@ -8,7 +8,6 @@
         .info { margin-bottom: 20px; }
         .table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
         .table th, .table td { border: 1px solid #000; padding: 8px; text-align: left; }
-        .totals { width: 300px; margin-left: auto; }
         .footer { margin-top: 50px; text-align: center; font-size: 0.9em; }
         .no-print { display: none; }
         @media print {
@@ -50,39 +49,21 @@
         <thead>
             <tr>
                 <th width="5%">#</th>
-                <th width="45%">Producto</th>
-                <th width="15%">Marca</th>
-                <th width="10%">Cantidad</th>
-                <th width="15%">Precio Unitario</th>
-                <th width="15%">Subtotal</th>
+                <th width="55%">Producto</th>
+                <th width="20%">Marca</th>
+                <th width="20%">Cantidad</th>
             </tr>
         </thead>
         <tbody>
-            @php
-                $total = 0;
-            @endphp
             @foreach($orden->detalles as $index => $detalle)
-            @php
-                $subtotal = $detalle->cantidad * $detalle->precioUnitario;
-                $total += $subtotal;
-            @endphp
             <tr>
                 <td>{{ $index + 1 }}</td>
                 <td>{{ $detalle->articuloMarca->articulo->nombreArticulo }}</td>
                 <td>{{ $detalle->articuloMarca->marca->nombreMarca }}</td>
                 <td>{{ $detalle->cantidad }}</td>
-                <td>$ {{ number_format($detalle->precioUnitario, 2) }}</td>
-                <td>$ {{ number_format($subtotal, 2) }}</td>
             </tr>
             @endforeach
         </tbody>
-    </table>
-
-    <table class="totals">
-        <tr>
-            <td><strong>TOTAL:</strong></td>
-            <td><strong>$ {{ number_format($total, 2) }}</strong></td>
-        </tr>
     </table>
 
     <div class="footer">

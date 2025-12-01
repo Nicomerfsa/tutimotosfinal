@@ -39,11 +39,37 @@ class ClienteController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'razonSocial' => 'required|string|max:100',
-            'cuit' => 'required|string|size:11|unique:clientes,cuit',
+            'razonSocial' => [
+                'required',
+                'string',
+                'max:100',
+                'regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/'
+            ],
+            'cuit' => [
+                'required',
+                'string',
+                'max:11',
+                'regex:/^[0-9]+$/',
+                'unique:clientes,cuit'
+            ],
             'direccion' => 'nullable|string|max:150',
-            'telefono' => 'nullable|string|max:20',
-            'correo' => 'nullable|email|max:100',
+            'telefono' => [
+                'nullable',
+                'string',
+                'size:10',
+                'regex:/^[0-9]+$/'
+            ],
+            'correo' => 'nullable|email:rfc,dns|max:100',
+        ], [
+            'razonSocial.required' => 'La razón social/nombre es obligatoria.',
+            'razonSocial.regex' => 'La razón social/nombre solo debe contener letras y espacios. No se permiten números, guiones, puntos, comas ni símbolos.',
+            'cuit.required' => 'El CUIT/DNI es obligatorio.',
+            'cuit.max' => 'El CUIT/DNI debe tener máximo 11 dígitos.',
+            'cuit.regex' => 'El CUIT/DNI solo debe contener números, sin puntos ni guiones.',
+            'cuit.unique' => 'Este CUIT/DNI ya está registrado.',
+            'telefono.size' => 'El teléfono debe tener exactamente 10 dígitos.',
+            'telefono.regex' => 'El teléfono solo debe contener números, sin guiones ni espacios.',
+            'correo.email' => 'El formato del correo electrónico no es válido.',
         ]);
 
         Cliente::create($request->all());
@@ -66,11 +92,37 @@ class ClienteController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'razonSocial' => 'required|string|max:100',
-            'cuit' => 'required|string|size:11|unique:clientes,cuit,' . $id . ',idCliente',
+            'razonSocial' => [
+                'required',
+                'string',
+                'max:100',
+                'regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/'
+            ],
+            'cuit' => [
+                'required',
+                'string',
+                'max:11',
+                'regex:/^[0-9]+$/',
+                'unique:clientes,cuit,' . $id . ',idCliente'
+            ],
             'direccion' => 'nullable|string|max:150',
-            'telefono' => 'nullable|string|max:20',
-            'correo' => 'nullable|email|max:100',
+            'telefono' => [
+                'nullable',
+                'string',
+                'size:10',
+                'regex:/^[0-9]+$/'
+            ],
+            'correo' => 'nullable|email:rfc,dns|max:100',
+        ], [
+            'razonSocial.required' => 'La razón social/nombre es obligatoria.',
+            'razonSocial.regex' => 'La razón social/nombre solo debe contener letras y espacios. No se permiten números, guiones, puntos, comas ni símbolos.',
+            'cuit.required' => 'El CUIT/DNI es obligatorio.',
+            'cuit.max' => 'El CUIT/DNI debe tener máximo 11 dígitos.',
+            'cuit.regex' => 'El CUIT/DNI solo debe contener números, sin puntos ni guiones.',
+            'cuit.unique' => 'Este CUIT/DNI ya está registrado.',
+            'telefono.size' => 'El teléfono debe tener exactamente 10 dígitos.',
+            'telefono.regex' => 'El teléfono solo debe contener números, sin guiones ni espacios.',
+            'correo.email' => 'El formato del correo electrónico no es válido.',
         ]);
 
         $cliente = Cliente::findOrFail($id);

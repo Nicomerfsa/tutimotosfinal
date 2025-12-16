@@ -149,3 +149,4 @@ Route::middleware(['auth'])->group(function () {
 
 // Redirección por defecto
 Route::redirect('/home', '/dashboard');
+

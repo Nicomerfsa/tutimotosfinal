@@ -31,6 +31,31 @@ class ClienteController extends Controller
         return view('clientes.index', compact('clientes'));
     }
 
+    /**
+     * Método para búsqueda en tiempo real (autocomplete)
+     * IDÉNTICO al sistema que usas en cotizaciones
+     */
+    public function buscar(Request $request)
+    {
+        $search = $request->input('q', '');
+        
+        if (strlen($search) < 2) {
+            return response()->json([]);
+        }
+        
+        // Busca en cualquier parte del texto (como en tu cotizaciones)
+        $clientes = Cliente::where(function($query) use ($search) {
+                $query->where('razonSocial', 'like', '%' . $search . '%')
+                      ->orWhere('cuit', 'like', '%' . $search . '%')
+                      ->orWhere('correo', 'like', '%' . $search . '%');
+            })
+            ->orderBy('razonSocial')
+            ->limit(15)
+            ->get(['idCliente', 'razonSocial', 'cuit', 'correo', 'estado']);
+        
+        return response()->json($clientes);
+    }
+
     public function create()
     {
         return view('clientes.create');

@@ -18,15 +18,14 @@ class RemitoController extends Controller
             ->select(
                 'remitos.*',
                 'movimientos.idMovimiento',
-                'movimientos.tipoMovimiento',
-                'movimientos.tipo_salida', // Incluir tipo de salida
+                'movimientos.tipoMovimiento', // Solo esta columna existe
                 'almacenes.nombreAlmacen',
                 'usuarios.usuario'
             );
         
-        // Filtro por tipo de remito
+        // Filtro por tipo de remito (que es igual al tipoMovimiento)
         if ($request->has('tipo') && $request->tipo != '') {
-            $query->where('tipoRemito', $request->tipo);
+            $query->where('remitos.tipoRemito', $request->tipo); // Cambiado a tipoRemito
         }
         
         // Filtro por fecha
@@ -52,7 +51,12 @@ class RemitoController extends Controller
             ->where('remitos.idRemito', $id)
             ->select(
                 'remitos.*',
-                'movimientos.*',
+                'movimientos.idMovimiento',
+                'movimientos.tipoMovimiento',
+                'movimientos.fechaMovimiento',
+                'movimientos.idUsuario',
+                'movimientos.idAlmacen',
+                'movimientos.observaciones',
                 'almacenes.nombreAlmacen',
                 'usuarios.usuario'
             )
@@ -87,7 +91,12 @@ class RemitoController extends Controller
             ->where('remitos.idRemito', $id)
             ->select(
                 'remitos.*',
-                'movimientos.*',
+                'movimientos.idMovimiento',
+                'movimientos.tipoMovimiento',
+                'movimientos.fechaMovimiento',
+                'movimientos.idUsuario',
+                'movimientos.idAlmacen',
+                'movimientos.observaciones',
                 'almacenes.nombreAlmacen',
                 'usuarios.usuario'
             )
@@ -114,19 +123,15 @@ class RemitoController extends Controller
     }
 
     /**
-     * Obtener texto descriptivo para el tipo de salida
+     * Obtener texto descriptivo para el tipo de movimiento
      */
-    private function getTipoSalidaTexto($tipoSalida)
+    private function getTipoMovimientoTexto($tipoMovimiento)
     {
         $tipos = [
-            'VENTA' => 'Venta',
-            'CONSUMO_INTERNO' => 'Consumo Interno',
-            'ROTURA' => 'Rotura/Pérdida',
-            'TRASLADO' => 'Traslado entre Almacenes',
-            'DEVOLUCION' => 'Devolución a Proveedor',
-            'OTRO' => 'Otro'
+            'ENTRADA' => 'Entrada',
+            'SALIDA' => 'Salida'
         ];
 
-        return $tipos[$tipoSalida] ?? 'Salida';
+        return $tipos[$tipoMovimiento] ?? $tipoMovimiento;
     }
 }
